@@ -1,218 +1,182 @@
 
-= Clojure Template Project
+= Clojure Demo of Exuberant Ctags and ZPrint 
 
-A simple template for Clojure projects
+Improve your Clojure editing experience with Vim or Emacs.
 
 == Overview
 
-This Clojure project shows my favorite layout of for both source & test files
-(sample Java source is included as well).  The project is also set-up to use the
-https://github.com/cloojure/tupelo[Tupelo Clojure] library and the
-https://github.com/jakemcc/lein-test-refresh[lein-test-refresh] plugin.
+If you can't use a full IDE like Cursive (IntelliJ/IDEA) for Clojure development, 
+you can still make progress using a more traditional editor like Vim or Emacs.
+Two tools that make a big improvement are:
 
-== How to User This Project
+- http://ctags.sourceforge.net/[Exuberant Ctags]
 
-To use this project, we assume you have already installed Java, Clojure, and Leiningen, and `git`.
+- https://github.com/kkinnear/zprint[Clojure ZPrint]
 
-=== Clone the Project Using Git
+== Exuberant Ctags
 
-Verify you have Git installed:
+As described
+https://en.wikipedia.org/wiki/Ctags[by Wikipedia]
+`ctags` is a tool which will scan your source code files and index identifiers 
+like function names and top-level variables. 
 
-```bash
-> git --version
-git version 2.25.0
-```
-
-Use `git` to clone the project (via SSH) into a new project names `demo`:
-```bash
-> git clone  git@github.com:io-tupelo/clj-template.git  demo  # git ssh URL
-```
-
-or, clone via HTTPS (if you don't have SSH set up on your computer & GitHub):
-```bash
-> git clone  https://github.com/io-tupelo/clj-template.git  demo  # git https URL
-```
-
-Then `cd` (change directory) into the new project:
+=== Verify homebrew is installed (download from https://brew.sh[brew.sh] if necessary)
 
 ```bash
-> cd demo
+> brew --version
+Homebrew 3.1.1
 ```
 
-=== Verify you have Java, Clojure, and Leiningen set up correctly
+=== Install Ctags on a Mac
 
-Try the following commands, and make sure you get similar output:
+Look up info on ctags
+
+```bash
+> brew info ctags
+ctags: stable 5.8 (bottled), HEAD
+Reimplementation of ctags(1)
+https://ctags.sourceforge.io/
+/usr/local/Cellar/ctags/5.8_2 (9 files, 360.2KB) *
+  Poured from bottle on 2021-04-13 at 17:05:02
+...
+```
+
+Install ctags
+
+```bash
+> brew install ctags
+```
+
+Install Vim if necessary
+
+```bash
+> brew install macvim    # Notice the spelling!
+```
+
+Run the `ctags` program, which creates an output file `./tags`
+
+```
+ctags -R .      # recursive fun starting at current dir
+```
+
+I like to set up the Vim search path for the tags file as:
+
+```
+set tags=./tags,../tags,../../tags,../../../tags,../../../../tags,tags
+```
+in my `~/.vimrc` file. Type `:help tag-commands` to see full Vim documentation.
+
+Now edit a file: 
+
+```
+gvim test/clj/tst/demo/core.clj   # or just `vim` for non-GUI version
+```
+
+Go the the end of the file, and put your cursor on the `walk-impl` symbol. Hit
+CTRL-<right-square-bracket> (i.e. `^]`), and Vim will jump to the definition of the `walk-impl`
+function. Move down a few lines to where `walk-map` is called.  Put the cursor on the the function
+name and repeat `^]`, and Vim jumps to the definition of that function.  
+
+Each "tag" command moves the cursor, saving the starting location on a stack.  To retrace your
+steps, type CTLR-t (i.e. `^t`). Each time Vim will move the cursor back to the site of the previous
+location, until the stack is exhausted.
+
+=== Using Ctags with Emacs
+
+Emacs also understands `ctags`, but uses a different file format.  Invoke the program as:
+
+```
+ctags -e -R .
+```
+
+to generate an Emacs-format `tags` file.
+
+=== Using Ctags with Other Editors
+
+Wikipedia lists 
+https://en.wikipedia.org/wiki/Ctags#Editors_that_support_ctags[many other editors]
+as being able to use Ctags, including Atom and VS Code.
+
+
+
+
+== Formatting Clojure Source Code with Zprint
+
+=== Installing Zprint
+
+The simplest way to install Zprint is to download a pre-build uberjar of zprint 
+https://github.com/kkinnear/zprint/releases/download/1.1.1/zprint-filter-1.1.1[such as this one].
+
+Verify the file downloaded and is a JAR file:
+
+```
+> file ~/Downloads/zprint-filter-1.1.1
+/Users/alanthompson/Downloads/zprint-filter-1.1.1: Java archive data (JAR)
+```
+
+I place it in a convenient location in my home directory and add in the missing `.jar` suffix
+
+```
+> mkdir ~/opt
+> mv ~/Downloads/zprint-filter-1.1.1 ~/opt/zprint.jar
+```
+
+To make running Zprint fast & simple, add an alias to your `~/.zshrc` file:
+
+```
+alias zpru="java  -jar ~/opt/zprint.jar  -w **/*.clj* "   # uses ZSH wildcards to find all `*.clj` files
+```
+
+If you are using BASH, you will need to use `find` or similar to walk the directory tree 
+
+```
+alias zpru="java  -jar ~/opt/zprint.jar  -w  $(find . -name '*.clj{,c,s}') "   
+
+```
+
+You also need to create a configuration file `~/.zprintrc`.  After much experimentation, I recommend
+using the following configuration for Clojure source code:
+
+```
+> cat ~/.zprintrc
+{:width    125
+ :style    :respect-nl 
+ :map      {:justify? true}
+ :binding  {:justify? true}
+ :pair     {:justify? true}
+}
+```
+
+Make sure you have Java installed:
 
 ```bash
 > java --version
 java 13 2019-09-17
 Java(TM) SE Runtime Environment (build 13+33)
 Java HotSpot(TM) 64-Bit Server VM (build 13+33, mixed mode, sharing)
-
-> lein --version
-Leiningen 2.9.1 on Java 13 Java HotSpot(TM) 64-Bit Server VM
 ```
 
-== Running Unit Tests - Plain
+and the you can run Zprint:
 
-```pre
-> lein clean
-> lein test
+```
+> zpru     # invoke the uberjar using the alias
 ```
 
-with result:
+It only takes a second or two to reformat all the matching `\*.clj`, `*.cljc`, and `*.cljs` files.
+If edit a source file, you can experiment with moving around the source code, then running
+`Zprint` and reloading the file to see how `Zprint` reformats the code (note, Zprint will never
+delete a blank line) with the above configuration.
 
-```pre
-lein test _bootstrap
--------------------------------
-   Clojure 1.10.1    Java 13
--------------------------------
 
-lein test tst.demo.core
-result => "Hello, World!\n"
 
-Ran 4 tests containing 6 assertions.
-0 failures, 0 errors.
-```
 
-I do the above so often that I have a Bash/Zsh alias set up:
 
-```bash
-alias lct="time (lein do clean, test)"       # lct => Lein Clean Test
-```
 
-== Running Unit Tests with `lein test-refresh`
 
-IMHO, https://github.com/jakemcc/lein-test-refresh[the lein-test-refresh project] provides the best way of doing
-iterative development in Clojure, re-running unit tests every time you save a source file from the editor.
-
-```pre
-> lein test-refresh
-```
-
-or make an alias:
-
-```bash
-alias lctr="lein do clean, test-refresh"    # lctr => Lein Clean Test-Refresh
-```
-
-with result:
-
-```pre
-Testing _bootstrap
--------------------------------
-   Clojure 1.10.1    Java 13
--------------------------------
-
-Testing tst.demo.core
-result => "Hello, World!\n"
-
-Ran 4 tests containing 6 assertions.
-0 failures, 0 errors.
-
-Passed all tests
-Finished at 07:56:48.252 (run time: 6.709s)
-...
-```
-
-in this instance, the test output pauses after printing the elapsed time, and waits to re-run
-upon any file change. For example, make a simple change in the namespace `demo.core`  by adding
-the word "Again!" to the `println` expression, and watch as the tests are automatically re-run:
-
-```pre
-...
-Testing tst.demo.core
-result => "Hello, World! Again!\n"
-...
-Finished at 07:59:53.863 (run time: 0.034s)
-```
-
-Note that the tests were all re-run in only 34 milliseconds (nearly instantaneous), since the JVM was already
-started and Clojure itself (plus library code) has already been compiled.
-
-=== Using "Focus" Mode
-
-Change one of the `dotest` forms in `tst.demo.core` to `dotest-focus`.  If there is at least one `dotest-focus` present
-in the project, then ***only*** the "focus" tests will be run.  This is helpful when you want to
-temporarily focus on a specific feature, without the distraction of all the other tests runnning.
-
-Note that only `lein test-refresh` (i.e. `lctr`) will honor the `focus` mode; `lein test` (i.e. `lct`) will always run all tests.
-
-== Running Unit Tests with Deps/CLI & Kaocha
-
-These files allow one to test/run the code via Deps/CLI:
-
- - deps.edn
- - tests.edn
- - bin/kaocha
-
-Just type the following to run the unit tets:
-
-```pre
-> bin/kaocha
-```
-
-It will also compile any Java source code and include it in the unit tests.
-
-== Keeping Dependency Versions Up-To-Date
-
-This project includes the `lein-ancient` plugin, which will tell you if any of your dependency
-libraries are out of date. I have an alias:
-
-```bash
-alias laca="lein ancient check :all"
-```
-
-which will give you a list of version updates you should make, or just
-
-```pre
-all artifacts are up-to-date.
-```
-
-if you are already up-to-date on everything.
-
-== Plumatic Schema
-
-The function `demo.core/add2` shows the usage of https://github.com/plumatic/schema[Plumatic Schema] to document
-function argument types and return value type.  This is a lifesaver!
-
-== Documentation
-
-- The https://github.com/cloojure/tupelo[Tupelo Clojure] library on GitHub
-- The Tupelo Clojure https://cljdoc.org/d/tupelo/tupelo/0.9.183/doc/readme[API Docs] on cljdoc.org
-- The https://clojure.org/api/cheatsheet[Clojure CheatSheet].  Always have a browser tab open here,
-  and **__study frequently!__**
-- The https://cljs.info/cheatsheet[ClojureScript CheatSheet].  **__Another great resource!__**
-- The above links to examples on http://clojuredocs.org/[ClojureDocs.org]
-- Also see http://clojure-doc.org/[Clojure-Doc.org] (similar name, different website!)
-- API Documentation for most any Clojure library can be found link:https://cljdoc.org/[at cljdoc.org]
-- The online book https://www.braveclojure.com/[Brave Clojure].  Be sure to also buy a copy!
-- The book https://pragprog.com/book/roclojure/getting-clojure[Getting Clojure]
-- The book https://www.oreilly.com/library/view/living-clojure/9781491909270/[Living Clojure]
-- The https://github.com/clojure-cookbook/clojure-cookbook[Clojure Cookbook]
-- The https://www.clojure-toolbox.com/[Clojure Toolbox] has a large list of libraries you can use
-- https://clojure.org/[Clojure.org] and https://clojurescript.org[ClojureScript.org] - the mothership
 
 == License
 
-Copyright © 2020  Alan Thompson
+Copyright © 2021  Alan Thompson
 
 Distributed under the link:https://www.eclipse.org/legal/epl-v10.html[Eclipse Public License], the same as Clojure.
-
-== Development Environment
-
-Developed using link:https://www.jetbrains.com/idea/[*IntelliJ IDEA*] 
-with the link:https://cursive-ide.com/[*Cursive* Clojure plugin].
-
-image:resources/intellij-idea-logo-400.png[IntelliJ,200,200]
-
-image:resources/cursive-logo-300.png[Cursive]
-
-YourKit supports open source projects with its full-featured Java Profiler.
-YourKit, LLC is the creator of
-link:https://www.yourkit.com/java/profiler/[YourKit Java Profiler]
-and link:https://www.yourkit.com/.net/profiler/[YourKit .NET Profiler],
-innovative and intelligent tools for profiling Java and .NET applications.
-
-image:https://www.yourkit.com/images/yklogo.png[YourKit,400,400]
 

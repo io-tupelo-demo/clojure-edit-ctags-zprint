@@ -5,77 +5,7 @@
             [tupelo.misc :as misc]
             [tupelo.schema :as tsk]))
 
-(dotest-focus
-  ; (is= true false)
-  ; inc doubly-nested map values
-  (is= (it-> {:a {:aa 1}, :b {:ba 2, :bb 3}}
-             (sp/transform [sp/MAP-VALS sp/MAP-VALS] inc it))
-       {:a {:aa 2}, :b {:ba 3, :bb 4}})
 
-  ; inc all map values with key `:a` and odd value
-  (is= (it-> [{:a 1} {:a 2} {:a 3} {:a 4}]
-             (sp/transform [sp/ALL :a even?] inc it))
-       [{:a 1} {:a 3} {:a 3} {:a 5}])
-
-  ; collect all nums divisible by 3
-  (let [mul-3? (fn [arg] (zero? (mod arg 3)))]
-    (is= (it-> [[1 2 3 4] [] [5 3 2 18] [2 4 6] [12]]
-               (sp/select [sp/ALL sp/ALL mul-3?] it))
-         [3 3 18 6 12])
-
-    ; delete all nums divisible by 3
-    (is= (it-> [[1 2 3 4] [] [5 3 2 18] [2 4 6] [12]]
-               (sp/setval [sp/ALL sp/ALL mul-3?] sp/NONE it))
-         [[1 2 4] [] [5 2] [2 4] []]))
-
-  ; delete maps where the :idx value is <= 2
-  (let [ticker-dayrecs {:aaa [{:idx 2, :price 12} {:idx 3, :price 13} {:idx 4, :price 14}],
-                        :bbb [{:idx 1, :price 21} {:idx 2, :price 22} {:idx 3, :price 23} {:idx 4, :price 24}]}]
-    (is= [2 3 4 1] ; select all the :idx keys
-         (it-> ticker-dayrecs
-               (sp/select [sp/MAP-VALS sp/ALL] it)
-               (sp/transform [sp/ALL] :idx it)
-               (distinct it)
-               (vec it)))
-
-    ; delete maps where the (<= :idx 2)
-    (is= (it-> ticker-dayrecs
-               (sp/setval [sp/MAP-VALS sp/ALL #(<= (grab :idx %) 2)] sp/NONE it))
-         {:aaa [{:idx 3, :price 13} {:idx 4, :price 14}],
-          :bbb [{:idx 3, :price 23} {:idx 4, :price 24}]}))
-
-  ; delete MapEntries with an odd value
-  (is= (it-> {:a 1, :b 2, :c 3, :d 4, :e 5, :f 6}
-             (sp/setval [sp/MAP-VALS odd?] sp/NONE it))
-       {:b 2, :d 4, :f 6})
-
-  ; Doesn't work unless sorted map
-  (let [m1 {:aaa {0 {:dnum 0, :price 10}, 2 {:dnum 2, :price 12}, 1 {:dnum 1, :price 11}},
-            :bbb {2 {:dnum 2, :price 22}, 1 {:dnum 1, :price 21}, 0 {:dnum 0, :price 20}}}]
-    (isnt= (it-> m1 (sp/select [:aaa sp/MAP-VALS :price] it))
-           [10 11 12])
-    (is= (it-> m1 (misc/walk-map->sorted it) (sp/select [:aaa sp/MAP-VALS :price] it))
-         [10 11 12])))
-
-;---------------------------------------------------------------------------------------------------
-; #awt
-(dotest-focus (let [book     {:intro              {:one-liners [{:line "wowza", :rating 7}
-                                                                {:line "cool!", :rating 4}]},
-                              :how-many-lines     10,
-                              :rubbish-one-liners [{:line "bongo", :rating 1}
-                                                   {:line "foo", :rating 2}],
-                              :other-info         {:author {:name "me", :age 24}}}
-                    expected {:intro              {:one-liners [{:line "wowza", :rating 7}
-                                                                {:line "cool!", :rating 4}]},
-                              :how-many-lines     10,
-                              :rubbish-one-liners [{:line "bongo"} {:line "foo"}],
-                              :other-info         {:author {:name "me"}}}]
-                (is= expected
-                     (it-> book
-                           (sp/setval [:rubbish-one-liners sp/ALL :rating] sp/NONE it)
-                           (sp/setval [:other-info :author :age] sp/NONE it)))))
-
-;-----------------------------------------------------------------------------
 (declare walk-impl walk-map walk-list walk-set)
 
 (defn type-short
@@ -185,18 +115,4 @@
           :else          (walk-leaf stack-new item))))
 
 (defn walk [item] (walk-impl [] item))
-
-(when false
-  (dotest (walk {:a 1, :b [2 3 #{:d :e}]}
-                ;{:enter (fn [ctx]
-                ;          ()
-                ;          (with-map-vals ctx [raw stack]
-                ;                    (spyx stack)
-                ;                    ))}
-          )))
-
-
-
-
-
 
