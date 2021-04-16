@@ -56,7 +56,7 @@ Install Vim if necessary
 Run the `ctags` program, which creates an output file `./tags`
 
 ```
-ctags -R .      # recursive fun starting at current dir
+ctags -R .      # recursive run starting at current dir
 ```
 
 I like to set up the Vim search path for the tags file as:
@@ -100,11 +100,11 @@ as being able to use Ctags, including Atom and VS Code.
 
 
 
-== Formatting Clojure Source Code with Zprint
+== Formatting Clojure Source Code with ZPrint
 
-=== Installing Zprint
+=== Installing ZPrint
 
-The simplest way to install Zprint is to download a pre-build uberjar of zprint 
+The simplest way to install ZPrint is to download a pre-build uberjar of ZPrint 
 https://github.com/kkinnear/zprint/releases/download/1.1.1/zprint-filter-1.1.1[such as this one].
 
 Verify the file downloaded and is a JAR file:
@@ -121,7 +121,7 @@ I place it in a convenient location in my home directory and add in the missing 
 > mv ~/Downloads/zprint-filter-1.1.1 ~/opt/zprint.jar
 ```
 
-To make running Zprint fast & simple, add an alias to your `~/.zshrc` file:
+To make running ZPrint fast & simple, add an alias to your `~/.zshrc` file:
 
 ```
 alias zpru="java  -jar ~/opt/zprint.jar  -w **/*.clj* "   # uses ZSH wildcards to find all `*.clj` files
@@ -156,7 +156,7 @@ Java(TM) SE Runtime Environment (build 13+33)
 Java HotSpot(TM) 64-Bit Server VM (build 13+33, mixed mode, sharing)
 ```
 
-and the you can run Zprint:
+and the you can run ZPrint:
 
 ```
 > zpru     # invoke the uberjar using the alias
@@ -164,7 +164,7 @@ and the you can run Zprint:
 
 It only takes a second or two to reformat all the matching `\*.clj`, `*.cljc`, and `*.cljs` files.
 If edit a source file, you can experiment with moving around the source code, then running
-`Zprint` and reloading the file to see how `Zprint` reformats the code (note, Zprint will never
+`ZPrint` and reloading the file to see how `ZPrint` reformats the code (note, ZPrint will never
 delete a blank line) with the above configuration.
 
 
