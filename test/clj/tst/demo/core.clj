@@ -98,7 +98,10 @@
     ;:-----------------------------------------------------------------------------)
     ;(spy :walk-set setty)
     ;(spyx-pretty stack)
-    (forv [item setty] (let [info {:type :set-elem, :raw item} stack-new (prepend info stack)] (walk-impl stack-new item)))))
+    (forv [item setty]
+          (let [info      {:type :set-elem, :raw item}
+                stack-new (prepend info stack)]
+            (walk-impl stack-new item)))))
 
 (defn walk-impl
   [stack item]
